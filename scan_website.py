@@ -17,7 +17,7 @@ URL_TRAINING = 'http://sportforus.ru/wv/training/'
 # начало строки документа для регистрации
 URL_REG = 'http://sportforus.ru/wv/training/reg/'
 # последний номер документа с тренировкой
-LAST_NUMBER = 3722
+LAST_NUMBER = 3715
 # Content-Length страницы с несуществующей тренировкой
 FAKE_LENGTH = 9278
 # Дельта изменений длины контента списка всех тренировок
@@ -42,7 +42,7 @@ def second_connection():
     }
     # создание второй сессии при подключении к сайту
     session_second = requests.Session()
-    print('Отправляемся на регистрацию Полины')
+    print('running Polina')
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
     for i in range(6):
@@ -60,13 +60,16 @@ def registration(first_URL):
     th3 = Thread(target=second_connection)
     th3.start()
     for i in range(6):
+        # длина страницы с тренировкой
+        new = session.get(first_URL, stream=True).headers['Content-Length']
+        print(first_URL, 'длина страницы с тренировкой ', new)
         # запрос для записи на тренировку
         session.get(first_URL, headers=header)
         print('Моя регистрация:', first_URL)
         # составление адреса слудующей тренировки
         first_URL = URL_REG + str(LAST_NUMBER + i + 2)
         time.sleep(5)
-    print('Функция моей регистрации завершилась')
+    print('OK')
 
 
 # функция для проигрывания мелодии при начале записи
@@ -132,9 +135,7 @@ while True:
         print('начальная длина -', current_length)
 
         # адрес  первой ожидаемой тренировки
-        # например 'http://sportforus.ru/wv/training/3723'
         new_URL_training = URL_TRAINING + str(LAST_NUMBER + 1)
-        # получение длины первой ожидаемой тренировки
         new_length_training = session.get(
             new_URL_training, stream=True
             ).headers['Content-Length']
@@ -162,11 +163,11 @@ while True:
                 else:
                     print('произошли изменения')
                     # запуск потока воспроизведения звука
-                    th1 = Thread(target=sound)
+                    # th1 = Thread(target=sound)
                     # запуск потока появления всплывающего окна
-                    th2 = Thread(target=window)
-                    th1.start()
-                    th2.start()
+                    # th2 = Thread(target=window)
+                    # th1.start()
+                    # th2.start()
                     # запуск функции отправки СМС
                     send_SMS()
                     # запуск функции отправки сообщения в Телеграмм
@@ -174,10 +175,8 @@ while True:
                     time.sleep(10)
                     # проверка длины страницы с несуществующей тренировкой
                     if int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING:
-                        print('Ожидаемая тренировка появилась, ее длина =', new_length_training)
                         # адрес страницы регистрации на тренировке
                         new_URL_reg = URL_REG + str(LAST_NUMBER + 1)
-                        print('Отправляемся на автоматическую регистрацию')
                         registration(new_URL_reg)
                         headers_training_list = session.get(
                                               URL_TRAINING_LIST, stream=True
