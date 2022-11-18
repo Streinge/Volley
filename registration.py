@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 import requests
 import fake_useragent
 
@@ -18,6 +19,32 @@ FAKE_LENGTH = 9278
 DELTA_LIST = 7
 # Дельта изменений длины контента после размещений тренировки на сайте
 DELTA_TRAINING = 100
+# Количество тренировок в неделе
+NUMBER_TRAINING = 7
+# задержка по времени при регистрации тренировок, секунд
+DELAY_REG = 10
+# задержка по времени между опросами об изменениях страницы с тренировками
+DELAY_LIST = 30
+# функция регистрации на тренировках
+def registration():
+    for j in range(NUMBER_TRAINING):
+        while True:
+            time.sleep(DELAY_REG)
+            # получение длины ожидаемой тренировки
+            length_new_train = session.get(url_week_train[j], stream=True).headers['Content-Length']
+            # проверка условия существования тренировки.
+            if int(length_new_train) - FAKE_LENGTH > 100:
+                print(int(length_new_train) - FAKE_LENGTH > 100)
+                # регистрация на первой ожидаемой тренировке 
+                session.get(url_reg_week_train[j], headers=header)
+                print('Регистрация на:', url_reg_week_train[j])
+                break
+            else:
+                print(int(length_new_train) - FAKE_LENGTH > 100)
+                continue
+    print('Регистрация завершена')
+
+
 
 user = fake_useragent.UserAgent().random
 
@@ -32,22 +59,28 @@ data = {
      'login_password': 'sokol15',
      'login': 'submit'
 }
+
 print('running')
+# список адресов ожидаемых тренировок
+url_week_train = []
+# список адресов страниц регистрации ожидаемых тренировок
+url_reg_week_train = []
+
 session = requests.Session()
 # передача данных для авторизации
-session.post(LINK, data=data, headers=header).headers
-# адрес первой ожидаемой тренировки
-url_new_train = URL_TRAINING + str(LAST_NUMBER + 1)
-# адрес страницы регистрации первой ожидаемой тренировки
-url_reg_new_train = URL_REG + str(LAST_NUMBER + 1)
-# регистрация на первой ожидаемой тренировке 
-session.get(url_reg_new_train, headers=header)
-length_new_train = session.get(url_new_train, stream=True).headers['Content-Length']
-"""if int(new_length) - FAKE_LENGTH > 100:
-    for i in range(7):
-        print(new_URL)
-        session.get(new_URL, headers=header)
-        new_URL = URL + str(LAST_NUMBER + i + 2)
-        time.sleep(5)
-print('OK')"""
-print(int(new_length))
+session.post(LINK, data=data, headers=header)
+# создание списка ожидаемых тренировок на ближайшую неделю
+# и создание списка страниц регистрации ожидаемых тренировок
+for i in range(NUMBER_TRAINING):
+    # формирование списка адресов ожидаемых тренировок
+    url_week_train.append(URL_TRAINING + str(LAST_NUMBER + 1 + i))
+    # формирование списка адресов страницы регистрации первой ожидаемой тренировки
+    url_reg_week_train.append(URL_REG + str(LAST_NUMBER + 1 + i))
+
+
+
+
+
+
+
+registration()
