@@ -1,12 +1,22 @@
 http://api.telegram.org/bot5520994198:AAFkYOFAi6rNdvLiM6hfYVbYU59OYD3b-3c/getUpdates
 
 5520994198:AAFkYOFAi6rNdvLiM6hfYVbYU59OYD3b-3c
-
+группа Volley74
 идентификатор группы:
 -829440234
+
 
 Volleyball_bot
 Имя пользователя: @Volley74Bot
 
      'username': 'Олеег',
      'password': 'a5k69mf223y',
+
+
+Группа Testing74
+Testing_bot
+@Testing74bot
+5579939015:AAFJq9Sz0TSZp-NFxRr9_K8QE9Z7dsshymY
+http://api.telegram.org/bot5579939015:AAFJq9Sz0TSZp-NFxRr9_K8QE9Z7dsshymY/getUpdates
+
+-1082504319
