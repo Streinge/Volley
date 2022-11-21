@@ -51,22 +51,22 @@ def second_connection():
         print('Регистрация Полины:', URL_reg_second)
         # составление адреса слудующей тренировки
         URL_reg_second = URL_REG + str(LAST_NUMBER + i + 2)
-        time.sleep(5)
+        time.sleep(3)
 
 
 # функция регистрации на сайте
 def registration(first_URL):
-    # запуск потока второой регистрации
-    th3 = Thread(target=second_connection)
-    th3.start()
     for i in range(6):
         # запрос для записи на тренировку
         session.get(first_URL, headers=header)
         print('Моя регистрация:', first_URL)
         # составление адреса слудующей тренировки
         first_URL = URL_REG + str(LAST_NUMBER + i + 2)
-        time.sleep(5)
+        time.sleep(10)
     print('Функция моей регистрации завершилась')
+    # запуск потока второой регистрации
+    th3 = Thread(target=second_connection)
+    th3.start()
 
 
 # функция для проигрывания мелодии при начале записи
