@@ -184,7 +184,9 @@ while True:
                                               ).headers
                         current_length = headers_training_list[
                                        'Content-Length']
-                    break
+                    else:
+                        print('Нет еще ожидаемой тренировки, ее длина = ', new_length_training)
+                        break
             except Exception as e:
                 print('error', e)
     except Exception:
