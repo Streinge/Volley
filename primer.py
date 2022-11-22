@@ -25,9 +25,10 @@ DELTA_LIST = 7
 # Дельта изменений длины контента после размещений тренировки на сайте
 DELTA_TRAINING = 100
 
+
 # функция регистрации второго пользователя
 def second_connection():
-    URL_reg_second = URL_REG  + str(LAST_NUMBER + 1)
+    URL_reg_second = URL_REG + str(LAST_NUMBER + 1)
     # создание юзер агента
     user_second = fake_useragent.UserAgent().random
     header_second = {
@@ -35,8 +36,9 @@ def second_connection():
     }
     # данные для авторизации на сайте
     name_second = 'Полина Махнёва'
+    # здесь перевод кодировки логина
     data_second = {
-         'login_name': name_second.encode('cp1251'),  # здесь перевод кодировки логина
+         'login_name': name_second.encode('cp1251'),
          'login_password': 'v3z8b1a73r9',
          'login': 'submit'
     }
@@ -46,7 +48,7 @@ def second_connection():
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
     for i in range(6):
-       # запрос для записи на тренировку
+        # запрос для записи на тренировку
         session_second.get(URL_reg_second, headers=header)
         print('Регистрация Полины:', URL_reg_second)
         # составление адреса слудующей тренировки
@@ -98,7 +100,8 @@ def message():
 # функция для отправки SMS о начале записи на номер телефона
 def send_SMS():
     sms_ru = SmsRu('C51BE417-745B-C0B4-F80D-A71F29127C55')
-    sms_ru.send('9000905976', '9227050474', message='ЗАПИСЬ!!!! ЗАПИСЬ!!!! ЗАПИСЬ!!!!')
+    sms_ru.send('9000905976', '9227050474',
+                message='ЗАПИСЬ!!!! ЗАПИСЬ!!!! ЗАПИСЬ!!!!')
 
 
 # создание юзер агента
@@ -174,7 +177,8 @@ while True:
                     time.sleep(10)
                     # проверка длины страницы с несуществующей тренировкой
                     if int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING:
-                        print('Ожидаемая тренировка появилась, ее длина =', new_length_training)
+                        print('Ожидаемая тренировка появилась, ее длина =',
+                              new_length_training)
                         # адрес страницы регистрации на тренировке
                         new_URL_reg = URL_REG + str(LAST_NUMBER + 1)
                         print('Отправляемся на автоматическую регистрацию')
@@ -185,7 +189,8 @@ while True:
                         current_length = headers_training_list[
                                        'Content-Length']
                     else:
-                        print('Нет еще ожидаемой тренировки, ее длина = ', new_length_training)
+                        print('Нет еще ожидаемой тренировки, ее длина = ',
+                              new_length_training)
                         break
             except Exception as e:
                 print('error', e)
