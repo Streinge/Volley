@@ -16,8 +16,7 @@ URL_TRAINING_LIST = 'http://sportforus.ru/wv/training/list'
 URL_TRAINING = 'http://sportforus.ru/wv/training/'
 # начало строки документа для регистрации
 URL_REG = 'http://sportforus.ru/wv/training/reg/'
-# последний номер документа с тренировкой
-LAST_NUMBER = 3722
+
 # Content-Length страницы с несуществующей тренировкой
 FAKE_LENGTH = 9278
 # Дельта изменений длины контента списка всех тренировок
@@ -34,12 +33,14 @@ DELAY_LIST = 30
 NAME_MAIN = 'Ludmila'
 # Пароль к основному логину
 PASSWORD_MAIN = 'sokol15'
+# последний номер документа с тренировкой
+last_number = 3729
 
 
 
 # функция регистрации второго пользователя
 def second_connection():
-    URL_reg_second = URL_REG + str(LAST_NUMBER + 1)
+    URL_reg_second = URL_REG + str(last_number + 1)
     # создание юзер агента
     user_second = fake_useragent.UserAgent().random
     header_second = {
@@ -62,7 +63,7 @@ def second_connection():
         session_second.get(URL_reg_second, headers=header)
         print('Регистрация Полины:', URL_reg_second)
         # составление адреса слудующей тренировки
-        URL_reg_second = URL_REG + str(LAST_NUMBER + i + 2)
+        URL_reg_second = URL_REG + str(last_number + i + 2)
         time.sleep(3)
 
 
@@ -117,6 +118,14 @@ def send_SMS():
     sms_ru = SmsRu('C51BE417-745B-C0B4-F80D-A71F29127C55')
     sms_ru.send('9000905976', '9227050474', message='ЗАПИСЬ!!!! ЗАПИСЬ!!!! ЗАПИСЬ!!!!')
 
+# функция получения Content-Lenght любой страницы
+def length_page(url_page):
+    return int(session.get(url_page, stream=True).headers['Content-Length'])
+
+# функция проверки существования тренировки
+def checking_training(url_train):
+    url_train = session.get(url_week_train[0], stream=True).headers['Content-Length']
+
 
 # создание юзер агента
 user = fake_useragent.UserAgent().random
@@ -138,13 +147,14 @@ url_reg_week_train = []
 # и создание списка страниц регистрации ожидаемых тренировок
 for i in range(NUMBER_TRAINING):
     # формирование списка адресов ожидаемых тренировок
-    url_week_train.append(URL_TRAINING + str(LAST_NUMBER + 1 + i))
+    url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
     # формирование списка адресов страницы регистрации первой ожидаемой
     # тренировки
-    url_reg_week_train.append(URL_REG + str(LAST_NUMBER + 1 + i))
+    url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
     print(url_week_train[i])
     print(url_reg_week_train[i])
-
+# задает переменную состояния, появилась или нет ожидаемая тренировка
+triggering_status = False
 
 
 while True:
@@ -154,15 +164,12 @@ while True:
         print('running')
         # передача данных для авторизации
         session.post(LINK, data=data, headers=header)
-
         # получение заголовоков страницы с тренировками
         headers_training_list = session.get(URL_TRAINING_LIST,
                                             stream=True).headers
         # cохранение текущего значения длины страницы cо всеми тренировками
         current_length = headers_training_list['Content-Length']
-
         print('начальная длина -', current_length)
-
         # получение длины первой ожидаемой тренировки
         new_length_training = session.get(
             url_week_train[0], stream=True
@@ -170,7 +177,6 @@ while True:
         print(url_week_train[0],
               new_length_training,
               int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING)
-
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
@@ -178,7 +184,7 @@ while True:
                 # получаем заголовки страницы с тренировками
                 headers_training_list = session.get(URL_TRAINING_LIST,
                                                     stream=True).headers
-                # сохраняем значени длинны страницы с тренировками
+                # сохраняем значение длинны страницы с тренировками
                 new_current_length = headers_training_list['Content-Length']
                 print('новая длина', new_current_length)
                 # функция возвращает локальное время в виде именованного кортежа
@@ -189,7 +195,7 @@ while True:
                 print(current_time, ' ', int(new_current_length),
                       '-', int(current_length), '=',
                       int(new_current_length) - int(current_length))
-                # вывожу булево значение разницы и заданой дельты
+                # выводит булево значение разницы и заданой дельты
                 print((int(new_current_length) - int(current_length)
                        ) <= DELTA_LIST)
                 if int(new_current_length) - int(current_length) <= DELTA_LIST:
@@ -197,17 +203,17 @@ while True:
                 else:
                     print('произошли изменения')
                     # запуск функции проверки наличия тренировки
-                    chacking_training()
-                    # запуск потока воспроизведения звука
-                    # th1 = Thread(target=sound)
-                    # запуск потока появления всплывающего окна
-                    # th2 = Thread(target=window)
-                    # th1.start()
-                    # th2.start()
-                    # запуск функции отправки СМС
-                    # send_SMS()
-                    # запуск функции отправки сообщения в Телеграмм
-                    # message()
+                    if checking_training(url_week_train[0]):
+                        # запуск потока воспроизведения звука
+                        th1 = Thread(target=sound)
+                        # запуск потока появления всплывающего окна
+                        th2 = Thread(target=window)
+                        th1.start()
+                        th2.start()
+                        # запуск функции отправки СМС
+                        send_SMS()
+                        # запуск функции отправки сообщения в Телеграмм
+                        message()
                     # time.sleep(10)
                     # проверка длины страницы с несуществующей тренировкой
                     if int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING:
