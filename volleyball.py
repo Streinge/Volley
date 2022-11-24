@@ -30,6 +30,11 @@ NUMBER_TRAINING = 7
 DELAY_REG = 10
 # задержка по времени между опросами об изменениях страницы с тренировками
 DELAY_LIST = 30
+# Основной логин
+NAME_MAIN = 'Ludmila'
+# Пароль к основному логину
+PASSWORD_MAIN = 'sokol15'
+
 
 
 # функция регистрации второго пользователя
@@ -119,14 +124,12 @@ header = {
       'user-agent': user
 }
 # данные для авторизации на сайте
-name = 'Олеег'
 data = {
-     'login_name': name.encode('cp1251'),  # здесь перевод кодировки логина
-     'login_password': 'a5k69mf223y',
+     'login_name': NAME_MAIN.encode('cp1251'),  # здесь перевод кодировки логина
+     'login_password': PASSWORD_MAIN,
      'login': 'submit'
 
 }
-
 # список адресов ожидаемых тренировок
 url_week_train = []
 # список адресов страниц регистрации ожидаемых тренировок
@@ -139,6 +142,9 @@ for i in range(NUMBER_TRAINING):
     # формирование списка адресов страницы регистрации первой ожидаемой
     # тренировки
     url_reg_week_train.append(URL_REG + str(LAST_NUMBER + 1 + i))
+    print(url_week_train[i])
+    print(url_reg_week_train[i])
+
 
 
 while True:
@@ -147,7 +153,7 @@ while True:
         session = requests.Session()
         print('running')
         # передача данных для авторизации
-        session.post(LINK, data=data, headers=header).headers
+        session.post(LINK, data=data, headers=header)
 
         # получение заголовоков страницы с тренировками
         headers_training_list = session.get(URL_TRAINING_LIST,
@@ -169,46 +175,51 @@ while True:
         while True:
             try:
                 time.sleep(30)
+                # получаем заголовки страницы с тренировками
                 headers_training_list = session.get(URL_TRAINING_LIST,
                                                     stream=True).headers
+                # сохраняем значени длинны страницы с тренировками
                 new_current_length = headers_training_list['Content-Length']
                 print('новая длина', new_current_length)
+                # функция возвращает локальное время в виде именованного кортежа
                 t = time.localtime()
+                # функция преорбразует кортеж в читаемую строку с часами и минутами
                 current_time = time.strftime("%H:%M:%S", t)
+                # выводим время, старое и новое значение длины и их разницу
                 print(current_time, ' ', int(new_current_length),
                       '-', int(current_length), '=',
                       int(new_current_length) - int(current_length))
+                # вывожу булево значение разницы и заданой дельты
                 print((int(new_current_length) - int(current_length)
                        ) <= DELTA_LIST)
                 if int(new_current_length) - int(current_length) <= DELTA_LIST:
                     continue
                 else:
                     print('произошли изменения')
+                    # запуск функции проверки наличия тренировки
+                    chacking_training()
                     # запуск потока воспроизведения звука
-                    th1 = Thread(target=sound)
+                    # th1 = Thread(target=sound)
                     # запуск потока появления всплывающего окна
-                    th2 = Thread(target=window)
-                    th1.start()
-                    th2.start()
+                    # th2 = Thread(target=window)
+                    # th1.start()
+                    # th2.start()
                     # запуск функции отправки СМС
-                    send_SMS()
+                    # send_SMS()
                     # запуск функции отправки сообщения в Телеграмм
-                    message()
-                    time.sleep(10)
+                    # message()
+                    # time.sleep(10)
                     # проверка длины страницы с несуществующей тренировкой
                     if int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING:
                         print('Ожидаемая тренировка появилась, ее длина =', new_length_training)
-                        # адрес страницы регистрации на тренировке
-                        new_URL_reg = URL_REG + str(LAST_NUMBER + 1)
-                        print('Отправляемся на автоматическую регистрацию')
-                        registration(new_URL_reg)
+                        registration()
                         headers_training_list = session.get(
                                               URL_TRAINING_LIST, stream=True
                                               ).headers
                         current_length = headers_training_list[
                                        'Content-Length']
                     break
-            except Exception as e:
-                print('error', e)
+                except Exception as e:
+           print('error', e)
     except Exception:
-        print('Что то пошло не так')
+        print('Что то пошло не так')"""
