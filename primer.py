@@ -17,7 +17,7 @@ URL_TRAINING = 'http://sportforus.ru/wv/training/'
 # начало строки документа для регистрации
 URL_REG = 'http://sportforus.ru/wv/training/reg/'
 # последний номер документа с тренировкой
-LAST_NUMBER = 3722
+LAST_NUMBER = 3729
 # Content-Length страницы с несуществующей тренировкой
 FAKE_LENGTH = 9278
 # Дельта изменений длины контента списка всех тренировок
