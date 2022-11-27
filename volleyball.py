@@ -27,8 +27,12 @@ DELTA_TRAINING = 100
 NUMBER_TRAINING = 7
 # задержка по времени при регистрации тренировок, секунд
 DELAY_REG = 10
+# задержка по времени между проверками наличия тренировки в первый раз
+DELAY_FIRST_CHECK = 10
+# задержка по времени между проверками наличия тренировки
+DELAY_CHECK = 3
 # задержка по времени между опросами об изменениях страницы с тренировками
-DELAY_LIST = 30
+DELAY_LIST = 15
 # Основной логин
 NAME_MAIN = 'Ludmila'
 # Пароль к основному логину
@@ -39,22 +43,23 @@ NUMBER_FIRST_CHECK = 3
 # последний номер документа с тренировкой
 last_number = 3729
 
+
 # функция получения Content-Lenght любой страницы
 def length_page(url_page):
     return int(session.get(url_page, stream=True).headers['Content-Length'])
 
+
 # функция регистрации второго пользователя
 def second_connection():
-    URL_reg_second = URL_REG + str(last_number + 1)
-    # создание юзер агента
     user_second = fake_useragent.UserAgent().random
     header_second = {
       'user-agent': user_second
     }
     # данные для авторизации на сайте
     name_second = 'Полина Махнёва'
+    # здесь перевод кодировки логина
     data_second = {
-         'login_name': name_second.encode('cp1251'),  # здесь перевод кодировки логина
+         'login_name': name_second.encode('cp1251'),
          'login_password': 'v3z8b1a73r9',
          'login': 'submit'
     }
@@ -63,32 +68,23 @@ def second_connection():
     print('Отправляемся на регистрацию Полины')
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
-    for i in range(6):
+    for i in range(NUMBER_TRAINING):
         # запрос для записи на тренировку
-        session_second.get(URL_reg_second, headers=header)
-        print('Регистрация Полины:', URL_reg_second)
-        # составление адреса слудующей тренировки
-        URL_reg_second = URL_REG + str(last_number + i + 2)
-        time.sleep(3)
+        session_second.get(url_reg_week_train[i], headers=header)
+        print('Регистрация Полины:', url_reg_week_train[i])
 
 
 # функция регистрации на сайте
 def registration():
+    # регистрация на первой ожидаемой тренировке
+    session.get(url_reg_week_train[0], headers=header)
+    print('Регистрация на:', url_reg_week_train[0])
     for j in range(NUMBER_TRAINING):
-        while True:
-            time.sleep(DELAY_REG)
-            # получение длины ожидаемой тренировки
-            length_new_train = session.get(url_week_train[j], stream=True).headers['Content-Length']
-            # проверка условия существования тренировки.
-            if int(length_new_train) - FAKE_LENGTH > 100:
-                print(int(length_new_train) - FAKE_LENGTH > 100)
-                # регистрация на первой ожидаемой тренировке 
-                session.get(url_reg_week_train[j], headers=header)
-                print('Регистрация на:', url_reg_week_train[j])
-                break
-            else:
-                print(int(length_new_train) - FAKE_LENGTH > 100)
-                continue
+        # проверка наличия следующих тренировок кроме первой
+        if checking_training(url_week_train[j+1], triggering_status):
+            session.get(url_reg_week_train[j+1], headers=header)
+            print('Регистрация на:', url_reg_week_train[j+1])
+            continue
     print('Регистрация завершена')
 
 
@@ -121,54 +117,69 @@ def message():
 # функция для отправки SMS о начале записи на номер телефона
 def send_SMS():
     sms_ru = SmsRu('C51BE417-745B-C0B4-F80D-A71F29127C55')
-    sms_ru.send('9000905976', '9227050474', message='ЗАПИСЬ!!!! ЗАПИСЬ!!!! ЗАПИСЬ!!!!')
+    sms_ru.send('9000905976', '9227050474',
+                message='ЗАПИСЬ!!!! ЗАПИСЬ!!!! ЗАПИСЬ!!!!')
+
 
 # функция проверки наличия тренировки
-def checking_training(url_test):
+def checking_training(url_test, triggering_status):
+    print('Проверяю ', url_test)
     if triggering_status:
         while True:
             if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
+                print('Тренировка: ', url_test, 'появилась')
                 return True
             else:
-                time.sleep(5)
+                time.sleep(DELAY_CHECK)
+                print('Проверяю ', url_test)
     else:
         for i in range(NUMBER_FIRST_CHECK):
             if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
-               triggering_status = True
-               return True
-    return False 
+                print('Тренировка: ', url_test, 'появилась')
+                triggering_status = True
+                return True
+            else:
+                time.sleep(DELAY_FIRST_CHECK)
+                print('Проверяю ', url_test)
+    print('Это ложное срабатывание')
+    return False
+
+
 # создание юзер агента
 user = fake_useragent.UserAgent().random
 header = {
       'user-agent': user
 }
 # данные для авторизации на сайте
+# здесь перевод кодировки логина
 data = {
-     'login_name': NAME_MAIN.encode('cp1251'),  # здесь перевод кодировки логина
+     'login_name': NAME_MAIN.encode('cp1251'),
      'login_password': PASSWORD_MAIN,
      'login': 'submit'
 
 }
-# список адресов ожидаемых тренировок
-url_week_train = []
-# список адресов страниц регистрации ожидаемых тренировок
-url_reg_week_train = []
-# создание списка ожидаемых тренировок на ближайшую неделю
-# и создание списка страниц регистрации ожидаемых тренировок
-for i in range(NUMBER_TRAINING):
-    # формирование списка адресов ожидаемых тренировок
-    url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
-    # формирование списка адресов страницы регистрации первой ожидаемой
-    # тренировки
-    url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
-    print(url_week_train[i])
-    print(url_reg_week_train[i])
-# задает переменную состояния, появилась или нет ожидаемая тренировка
-triggering_status = False
 
 
 while True:
     try:
+        # задает переменную состояния, появилась или нет ожидаемая тренировка
+        triggering_status = False
+        print('triggering_status =', triggering_status)
+        # список адресов ожидаемых тренировок
+        url_week_train = []
+        # список адресов страниц регистрации ожидаемых тренировок
+        url_reg_week_train = []
+        # создание списка ожидаемых тренировок на ближайшую неделю
+        # и создание списка страниц регистрации ожидаемых тренировок
+        for i in range(NUMBER_TRAINING):
+            print(i)
+            # формирование списка адресов ожидаемых тренировок
+            url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
+            # формирование списка адресов страницы регистрации первой ожидаемой
+            # тренировки
+            url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
+            print(url_week_train[i])
+            print(url_reg_week_train[i])
         # создание сессии при подключении к сайту
         session = requests.Session()
         print('running')
@@ -185,27 +196,27 @@ while True:
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
-                time.sleep(30)
+                time.sleep(DELAY_LIST)
                 # сохраняем новое значение длинны страницы с тренировками
                 new_current_length = length_page(URL_TRAINING_LIST)
                 print('новая длина', new_current_length)
-                # функция возвращает локальное время в виде именованного кортежа
+                # функция возвращает локальное время в виде кортежа
                 t = time.localtime()
-                # функция преорбразует кортеж в читаемую строку с часами и минутами
+                # функция преорбразует кортеж в строку с часами и минутами
                 current_time = time.strftime("%H:%M:%S", t)
                 # выводим время, старое и новое значение длины и их разницу
                 print(current_time, ' ', new_current_length,
                       '-', current_length, '=',
-                      new_current_length) - int(current_length)
+                      new_current_length - current_length)
                 # выводит булево значение разницы и заданой дельты
                 print(new_current_length - current_length
-                        <= DELTA_LIST)
+                      <= DELTA_LIST)
                 if new_current_length - current_length <= DELTA_LIST:
                     continue
                 else:
                     print('произошли изменения')
                     # запуск функции проверки наличия тренировки
-                    if checking_training(url_week_train[0]):
+                    if checking_training(url_week_train[0], triggering_status):
                         # запуск потока воспроизведения звука
                         th1 = Thread(target=sound)
                         # запуск потока появления всплывающего окна
@@ -216,18 +227,14 @@ while True:
                         send_SMS()
                         # запуск функции отправки сообщения в Телеграмм
                         message()
-                    # time.sleep(10)
-                    # проверка длины страницы с несуществующей тренировкой
-                    if int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING:
-                        print('Ожидаемая тренировка появилась, ее длина =', new_length_training)
+                        # запуск потока регистрации второго пользователя
+                        th3 = Thread(target=second_connection)
+                        th3.start()
+                        # запуск функции регистрации
                         registration()
-                        headers_training_list = session.get(
-                                              URL_TRAINING_LIST, stream=True
-                                              ).headers
-                        current_length = headers_training_list[
-                                       'Content-Length']
+                        last_number += NUMBER_TRAINING
                     break
-                except Exception as e:
-           print('error', e)
+            except Exception as e:
+                print('error', e)
     except Exception:
-        print('Что то пошло не так')"""
+        print('Что то пошло не так')
