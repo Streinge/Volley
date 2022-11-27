@@ -33,10 +33,15 @@ DELAY_LIST = 30
 NAME_MAIN = 'Ludmila'
 # Пароль к основному логину
 PASSWORD_MAIN = 'sokol15'
+# число проверок тренировок при первой сработке
+NUMBER_FIRST_CHECK = 3
+
 # последний номер документа с тренировкой
 last_number = 3729
 
-
+# функция получения Content-Lenght любой страницы
+def length_page(url_page):
+    return int(session.get(url_page, stream=True).headers['Content-Length'])
 
 # функция регистрации второго пользователя
 def second_connection():
@@ -118,15 +123,20 @@ def send_SMS():
     sms_ru = SmsRu('C51BE417-745B-C0B4-F80D-A71F29127C55')
     sms_ru.send('9000905976', '9227050474', message='ЗАПИСЬ!!!! ЗАПИСЬ!!!! ЗАПИСЬ!!!!')
 
-# функция получения Content-Lenght любой страницы
-def length_page(url_page):
-    return int(session.get(url_page, stream=True).headers['Content-Length'])
-
-# функция проверки существования тренировки
-def checking_training(url_train):
-    url_train = session.get(url_week_train[0], stream=True).headers['Content-Length']
-
-
+# функция проверки наличия тренировки
+def checking_training(url_test):
+    if triggering_status:
+        while True:
+            if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
+                return True
+            else:
+                time.sleep(5)
+    else:
+        for i in range(NUMBER_FIRST_CHECK):
+            if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
+               triggering_status = True
+               return True
+    return False 
 # создание юзер агента
 user = fake_useragent.UserAgent().random
 header = {
@@ -164,41 +174,33 @@ while True:
         print('running')
         # передача данных для авторизации
         session.post(LINK, data=data, headers=header)
-        # получение заголовоков страницы с тренировками
-        headers_training_list = session.get(URL_TRAINING_LIST,
-                                            stream=True).headers
         # cохранение текущего значения длины страницы cо всеми тренировками
-        current_length = headers_training_list['Content-Length']
+        current_length = length_page(URL_TRAINING_LIST)
         print('начальная длина -', current_length)
         # получение длины первой ожидаемой тренировки
-        new_length_training = session.get(
-            url_week_train[0], stream=True
-            ).headers['Content-Length']
+        new_length_training = length_page(url_week_train[0])
         print(url_week_train[0],
               new_length_training,
-              int(new_length_training) - FAKE_LENGTH > DELTA_TRAINING)
+              new_length_training - FAKE_LENGTH > DELTA_TRAINING)
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
                 time.sleep(30)
-                # получаем заголовки страницы с тренировками
-                headers_training_list = session.get(URL_TRAINING_LIST,
-                                                    stream=True).headers
-                # сохраняем значение длинны страницы с тренировками
-                new_current_length = headers_training_list['Content-Length']
+                # сохраняем новое значение длинны страницы с тренировками
+                new_current_length = length_page(URL_TRAINING_LIST)
                 print('новая длина', new_current_length)
                 # функция возвращает локальное время в виде именованного кортежа
                 t = time.localtime()
                 # функция преорбразует кортеж в читаемую строку с часами и минутами
                 current_time = time.strftime("%H:%M:%S", t)
                 # выводим время, старое и новое значение длины и их разницу
-                print(current_time, ' ', int(new_current_length),
-                      '-', int(current_length), '=',
-                      int(new_current_length) - int(current_length))
+                print(current_time, ' ', new_current_length,
+                      '-', current_length, '=',
+                      new_current_length) - int(current_length)
                 # выводит булево значение разницы и заданой дельты
-                print((int(new_current_length) - int(current_length)
-                       ) <= DELTA_LIST)
-                if int(new_current_length) - int(current_length) <= DELTA_LIST:
+                print(new_current_length - current_length
+                        <= DELTA_LIST)
+                if new_current_length - current_length <= DELTA_LIST:
                     continue
                 else:
                     print('произошли изменения')
