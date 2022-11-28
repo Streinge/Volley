@@ -41,7 +41,7 @@ PASSWORD_MAIN = 'sokol15'
 NUMBER_FIRST_CHECK = 3
 
 # последний номер документа с тренировкой
-last_number = 3729
+last_number = 3736
 
 
 # функция получения Content-Lenght любой страницы
@@ -50,7 +50,7 @@ def length_page(url_page):
 
 
 # функция регистрации второго пользователя
-def second_connection():
+def second_connection(url_reg):
     user_second = fake_useragent.UserAgent().random
     header_second = {
       'user-agent': user_second
@@ -68,10 +68,8 @@ def second_connection():
     print('Отправляемся на регистрацию Полины')
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
-    for i in range(NUMBER_TRAINING):
-        # запрос для записи на тренировку
-        session_second.get(url_reg_week_train[i], headers=header)
-        print('Регистрация Полины:', url_reg_week_train[i])
+    session_second.get(url_reg, headers=header)
+    print('Регистрация Полины:', url_reg)
 
 
 # функция регистрации на сайте
@@ -79,7 +77,8 @@ def registration():
     # регистрация на первой ожидаемой тренировке
     session.get(url_reg_week_train[0], headers=header)
     print('Регистрация на:', url_reg_week_train[0])
-    for j in range(NUMBER_TRAINING):
+    second_connection(url_reg_week_train[0])
+    for j in range(NUMBER_TRAINING - 1):
         # проверка наличия следующих тренировок кроме первой
         if checking_training(url_week_train[j+1], triggering_status):
             session.get(url_reg_week_train[j+1], headers=header)
@@ -227,9 +226,6 @@ while True:
                         send_SMS()
                         # запуск функции отправки сообщения в Телеграмм
                         message()
-                        # запуск потока регистрации второго пользователя
-                        th3 = Thread(target=second_connection)
-                        th3.start()
                         # запуск функции регистрации
                         registration()
                         last_number += NUMBER_TRAINING
