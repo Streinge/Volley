@@ -32,11 +32,15 @@ DELAY_LIST = 60
 NAME_MAIN = 'Ludmila'
 # Пароль к основному логину
 PASSWORD_MAIN = 'sokol15'
+# Второй логин
+NAME_SECOND = 'Олеег'
+PASSWORD_SECOND = 'a5k69mf223y'
 # число проверок тренировок при первой сработке
 NUMBER_FIRST_CHECK = 3
 
 # последний номер документа с тренировкой
 last_number = 3729
+
 
 def second_connection(url_reg):
     user_second = fake_useragent.UserAgent().random
@@ -44,20 +48,50 @@ def second_connection(url_reg):
       'user-agent': user_second
     }
     # данные для авторизации на сайте
-    name_second = 'Полина Махнёва'
     # здесь перевод кодировки логина
     data_second = {
-         'login_name': name_second.encode('cp1251'),
-         'login_password': 'v3z8b1a73r9',
+         'login_name': NAME_SECOND.encode('cp1251'),
+         'login_password': PASSWORD_SECOND,
          'login': 'submit'
     }
     # создание второй сессии при подключении к сайту
     session_second = requests.Session()
-    print('Отправляемся на регистрацию Полины')
+    print('Отправляемся на вторую регистрацию')
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
     session_second.get(url_reg, headers=header)
-    print('Регистрация Полины:', url_reg)
+    print('Вторая регистрация:', url_reg)
+
+
+# функция получения Content-Lenght любой страницы
+def length_page(url_page):
+    return int(session.get(url_page, stream=True).headers['Content-Length'])
+
+
+# функция проверки наличия тренировки
+def checking_training(url_test, triggering_status):
+    print('Проверяю ', url_test)
+    if triggering_status:
+        while True:
+            if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
+                print('Тренировка: ', url_test, 'появилась')
+                return True
+            else:
+                time.sleep(DELAY_CHECK)
+                print('Проверяю ', url_test)
+    else:
+        for i in range(NUMBER_FIRST_CHECK):
+            if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
+                print('Тренировка: ', url_test, 'появилась')
+                triggering_status = True
+                return True
+            else:
+                time.sleep(DELAY_FIRST_CHECK)
+                print('Проверяю ', url_test)
+    print('Это ложное срабатывание')
+    return False
+
+
 # функция регистрации на сайте
 def registration():
     # регистрация на первой ожидаемой тренировке
@@ -66,12 +100,12 @@ def registration():
     second_connection(url_reg_week_train[0])
     for j in range(NUMBER_TRAINING - 1):
         # проверка наличия следующих тренировок кроме первой
-        if checking_training(url_week_train[j+1], triggering_status):
-            session.get(url_reg_week_train[j+1], headers=header)
-            print('Регистрация на:', url_reg_week_train[j+1])
+        if checking_training(url_week_train[j + 1], triggering_status):
+            session.get(url_reg_week_train[j + 1], headers=header)
+            print('Регистрация на:', url_reg_week_train[j + 1])
+            second_connection(url_reg_week_train[j + 1])
             continue
     print('Регистрация завершена')
-
 
 
 user = fake_useragent.UserAgent().random
@@ -80,11 +114,10 @@ header = {
       'user-agent': user
 }
 
-name = 'Ludmila'
 
 data = {
-     'login_name': name.encode('cp1251'),
-     'login_password': 'sokol15',
+     'login_name': NAME_MAIN.encode('cp1251'),
+     'login_password': PASSWORD_MAIN,
      'login': 'submit'
 }
 
@@ -101,14 +134,10 @@ session.post(LINK, data=data, headers=header)
 # и создание списка страниц регистрации ожидаемых тренировок
 for i in range(NUMBER_TRAINING):
     # формирование списка адресов ожидаемых тренировок
-    url_week_train.append(URL_TRAINING + str(LAST_NUMBER + 1 + i))
-    # формирование списка адресов страницы регистрации первой ожидаемой тренировки
-    url_reg_week_train.append(URL_REG + str(LAST_NUMBER + 1 + i))
+    url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
+    # формирование списка адресов страницы регистрации первой ожидаемой
+    # тренировки
+    url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
 
-
-
-
-
-
-
+triggering_status = True
 registration()

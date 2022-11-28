@@ -32,14 +32,16 @@ DELAY_FIRST_CHECK = 10
 # задержка по времени между проверками наличия тренировки
 DELAY_CHECK = 3
 # задержка по времени между опросами об изменениях страницы с тренировками
-DELAY_LIST = 60
+DELAY_LIST = 30
 # Основной логин
-NAME_MAIN = 'Ludmila'
+NAME_MAIN = 'Олеег'
 # Пароль к основному логину
-PASSWORD_MAIN = 'sokol15'
+PASSWORD_MAIN = 'a5k69mf223y'
+# Второй логин
+NAME_SECOND = 'Полина Махнёва'
+PASSWORD_SECOND = 'v3z8b1a73r9'
 # число проверок тренировок при первой сработке
 NUMBER_FIRST_CHECK = 3
-
 # последний номер документа с тренировкой
 last_number = 3736
 
@@ -49,27 +51,26 @@ def length_page(url_page):
     return int(session.get(url_page, stream=True).headers['Content-Length'])
 
 
-# функция регистрации второго пользователя
+# функция регистрация второго логина
 def second_connection(url_reg):
     user_second = fake_useragent.UserAgent().random
     header_second = {
       'user-agent': user_second
     }
     # данные для авторизации на сайте
-    name_second = 'Полина Махнёва'
     # здесь перевод кодировки логина
     data_second = {
-         'login_name': name_second.encode('cp1251'),
-         'login_password': 'v3z8b1a73r9',
+         'login_name': NAME_SECOND.encode('cp1251'),
+         'login_password': PASSWORD_SECOND,
          'login': 'submit'
     }
     # создание второй сессии при подключении к сайту
     session_second = requests.Session()
-    print('Отправляемся на регистрацию Полины')
+    print('Отправляемся на вторую регистрацию')
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
     session_second.get(url_reg, headers=header)
-    print('Регистрация Полины:', url_reg)
+    print('Вторая регистрация:', url_reg)
 
 
 # функция регистрации на сайте
@@ -80,9 +81,10 @@ def registration():
     second_connection(url_reg_week_train[0])
     for j in range(NUMBER_TRAINING - 1):
         # проверка наличия следующих тренировок кроме первой
-        if checking_training(url_week_train[j+1], triggering_status):
-            session.get(url_reg_week_train[j+1], headers=header)
-            print('Регистрация на:', url_reg_week_train[j+1])
+        if checking_training(url_week_train[j + 1], triggering_status):
+            session.get(url_reg_week_train[j + 1], headers=header)
+            print('Регистрация на:', url_reg_week_train[j + 1])
+            second_connection(url_reg_week_train[j + 1])
             continue
     print('Регистрация завершена')
 
