@@ -1,1 +1,0 @@
-error HTTPConnectionPool(host='sportforus.ru', port=80): Max retries exceeded with url: /wv/training/list (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001CCFCB86620>, 'Connection to sportforus.ru timed out. (connect timeout=None)'))
