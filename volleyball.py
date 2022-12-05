@@ -42,8 +42,6 @@ NAME_SECOND = config('NAME_SECOND', default='')
 PASSWORD_SECOND = config('PASSWORD_SECOND', default='')
 # число проверок тренировок при первой сработке
 NUMBER_FIRST_CHECK = 3
-# последний номер документа с тренировкой
-last_number = 3743
 
 
 # функция получения Content-Lenght любой страницы
@@ -162,7 +160,12 @@ data = {
      'login': 'submit'
 
 }
-
+# открытие файла с номером последней тренировки
+f = open('number.txt')
+# последний номер документа с тренировкой
+last_number = int(f.read())
+print('Номер последней тренировки ', last_number)
+f.close()
 
 while True:
     try:
@@ -216,6 +219,7 @@ while True:
                       <= DELTA_LIST)
                 if new_current_length - current_length <= DELTA_LIST:
                     current_length = new_current_length
+                    print('Новая длина сейчас =', current_length)
                     continue
                 else:
                     print('произошли изменения')
@@ -234,6 +238,11 @@ while True:
                         # запуск функции регистрации
                         registration()
                         last_number += NUMBER_TRAINING
+                        # запись в файл нового значения
+                        # последней тренировки
+                        f = open('number.txt', 'w')
+                        f.write(str(last_number))
+                        f.close()
                     break
             except Exception as e:
                 print('error', e)
