@@ -43,7 +43,7 @@ PASSWORD_SECOND = config('PASSWORD_SECOND', default='')
 # число проверок тренировок при первой сработке
 NUMBER_FIRST_CHECK = 3
 # последний номер документа с тренировкой
-last_number = 3736
+last_number = 3743
 
 
 # функция получения Content-Lenght любой страницы
