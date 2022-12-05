@@ -215,6 +215,7 @@ while True:
                 print(new_current_length - current_length
                       <= DELTA_LIST)
                 if new_current_length - current_length <= DELTA_LIST:
+                    current_length = new_current_length
                     continue
                 else:
                     print('произошли изменения')
