@@ -243,7 +243,10 @@ while True:
                         f = open('number.txt', 'w')
                         f.write(str(last_number))
                         f.close()
-                    break
+                        break
+                    else:
+                        print('Продолжаем ждать изменения')
+                        continue
             except Exception as e:
                 print('error', e)
     except Exception:
