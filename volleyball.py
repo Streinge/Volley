@@ -104,13 +104,10 @@ def window():
     window.mainloop()
 
 
-# функция для отправки сообщения о начале записи в телеграм
-def message():
-    CHAT_ID_TELEGRAM_FIRST = config('CHAT_ID_TELEGRAM_FIRST', default='')
-    TOKEN_TELEGRAM_FIRST = config('TOKEN_TELEGRAM_FIRST', default='')
-    updater = Updater(TOKEN_TELEGRAM_FIRST, use_context=True)
-    message = "Возможно началась запись"
-    updater.bot.send_message(chat_id=CHAT_ID_TELEGRAM_FIRST, text=message)
+# функция для отправки сообщения  в телеграм
+def message(chat_id, token, message):
+    updater = Updater(token, use_context=True)
+    updater.bot.send_message(chat_id=chat_id, text=message)
 
 
 # функция для отправки SMS о начале записи на номер телефона
@@ -166,6 +163,16 @@ f = open('number.txt')
 last_number = int(f.read())
 print('Номер последней тренировки ', last_number)
 f.close()
+# определяем chat_id, token, и сообщение для отправки в телеграм
+# при начале записи
+CHAT_ID_TELEGRAM_FIRST = config('CHAT_ID_TELEGRAM_FIRST', default='')
+TOKEN_TELEGRAM_FIRST = config('TOKEN_TELEGRAM_FIRST', default='')
+MESSAGE_FIRST = 'Запись! Запись! Запись!'
+# определяем chat_id, token группы в телеграм для служебных сообщений
+CHAT_ID_TELEGRAM_SEC = config('CHAT_ID_TELEGRAM_SEC', default='')
+TOKEN_TELEGRAM_SEC = config('TOKEN_TELEGRAM_SEC', default='')
+# сообщение в телеграм о неполадках
+MESSAGE_SEC = 'Что-то пошло не так!'
 
 while True:
     try:
@@ -234,7 +241,7 @@ while True:
                         # запуск функции отправки СМС
                         send_SMS()
                         # запуск функции отправки сообщения в Телеграмм
-                        message()
+                        message(CHAT_ID_TELEGRAM_FIRST, TOKEN_TELEGRAM_FIRST, MESSAGE_FIRST)
                         # запуск функции регистрации
                         registration()
                         last_number += NUMBER_TRAINING
@@ -248,6 +255,7 @@ while True:
                         print('Продолжаем ждать изменения')
                         continue
             except Exception as e:
+                message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, MESSAGE_SEC)
                 print('error', e)
     except Exception:
         print('Что то пошло не так')
