@@ -223,12 +223,8 @@ while True:
                       new_current_length - current_length)
                 # выводит булево значение разницы и заданой дельты
                 print(new_current_length - current_length
-                      <= DELTA_LIST)
-                if new_current_length - current_length <= DELTA_LIST:
-                    current_length = new_current_length
-                    print('Новая длина сейчас =', current_length)
-                    continue
-                else:
+                      > DELTA_LIST)
+                if new_current_length - current_length > DELTA_LIST:
                     print('произошли изменения')
                     # запуск функции проверки наличия тренировки
                     if checking_training(url_week_train[0], triggering_status):
@@ -255,10 +251,10 @@ while True:
                         f.write(str(last_number))
                         f.close()
                         print('Номер записался в файл')
-                        break
                     else:
                         print('Продолжаем ждать изменения')
-                        continue
+                current_length = new_current_length
+                print('Новая длина сейчас =', current_length)
             except Exception as e:
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, MESSAGE_SEC)
                 print('error', e)
