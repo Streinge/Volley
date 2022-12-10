@@ -241,15 +241,20 @@ while True:
                         # запуск функции отправки СМС
                         send_SMS()
                         # запуск функции отправки сообщения в Телеграмм
-                        message(CHAT_ID_TELEGRAM_FIRST, TOKEN_TELEGRAM_FIRST, MESSAGE_FIRST)
+                        message(CHAT_ID_TELEGRAM_FIRST, TOKEN_TELEGRAM_FIRST,
+                                MESSAGE_FIRST)
                         # запуск функции регистрации
                         registration()
+                        # меняем номер последнее тренировки
                         last_number += NUMBER_TRAINING
+                        print('Номер последней тренировки изменился',
+                              last_number)
                         # запись в файл нового значения
                         # последней тренировки
                         f = open('number.txt', 'w')
                         f.write(str(last_number))
                         f.close()
+                        print('Номер записался в файл')
                         break
                     else:
                         print('Продолжаем ждать изменения')
