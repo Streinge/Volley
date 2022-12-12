@@ -251,6 +251,7 @@ while True:
                         f.write(str(last_number))
                         f.close()
                         print('Номер записался в файл')
+                        break
                     else:
                         print('Продолжаем ждать изменения')
                 current_length = new_current_length
