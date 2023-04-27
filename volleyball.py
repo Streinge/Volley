@@ -17,8 +17,6 @@ URL_TRAINING_LIST = config('URL_TRAINING_LIST', default='')
 URL_TRAINING = config('URL_TRAINING', default='')
 # начало строки документа для регистрации
 URL_REG = config('URL_REG', default='')
-# Content-Length страницы с несуществующей тренировкой
-FAKE_LENGTH = 9278
 # Дельта изменений длины контента списка всех тренировок
 DELTA_LIST = 7
 # Дельта изменений длины контента после размещений тренировки на сайте
@@ -42,6 +40,10 @@ NAME_SECOND = config('NAME_SECOND', default='')
 PASSWORD_SECOND = config('PASSWORD_SECOND', default='')
 # число проверок тренировок при первой сработке
 NUMBER_FIRST_CHECK = 3
+# дельта для проверки точно несуществующе тренировки
+# то есть сколько прибавить к номеру последней тренировки
+# чтобы точно получить нереальный номер
+DELTA_FAKE = 100
 
 
 # функция получения Content-Lenght любой страницы
@@ -201,11 +203,23 @@ while True:
         # cохранение текущего значения длины страницы cо всеми тренировками
         current_length = length_page(URL_TRAINING_LIST)
         print('начальная длина -', current_length)
+        # адрес последней существующей тренировки
+        url_last = URL_TRAINING + str(last_number)
+        print('адрес последней существующей тренировки', url_last)
+        # печать  длины последней существующей тренировки
+        print('Длина последней тренировки', length_page(url_last))
+        # формирование адреса точно несуществуюещей тренировки
+        url_fake = URL_TRAINING + str(last_number + 1 + DELTA_FAKE)
+        print('адрес точно несуществующей тренировки', url_fake)
+        # получение Content-Length страницы с точно несуществующей тренировкой
+        FAKE_LENGTH = length_page(url_fake)
         # получение длины первой ожидаемой тренировки
         new_length_training = length_page(url_week_train[0])
         print(url_week_train[0],
               new_length_training,
               new_length_training - FAKE_LENGTH > DELTA_TRAINING)
+        print('длина первой возможной тренировки', new_length_training)
+        print('длина тренировки, которой точно не существует', FAKE_LENGTH )
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
