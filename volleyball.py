@@ -51,7 +51,7 @@ def length_page(url_page):
     return int(session.get(url_page, stream=True).headers['Content-Length'])
 
 
-# функция регистрация второго логина
+# функция авторизации второго логина
 def second_connection(url_reg):
     user_second = fake_useragent.UserAgent().random
     header_second = {
