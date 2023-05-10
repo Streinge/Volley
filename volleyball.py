@@ -84,7 +84,7 @@ def registration():
         # проверка наличия следующих тренировок кроме первой
         if checking_training(url_week_train[j + 1], triggering_status):
             # добавил задержку по времени регистрации на тренировках
-            time.sleep(DELAY_REG * (J + 1))
+            time.sleep(DELAY_REG * (j + 1))
             session.get(url_reg_week_train[j + 1], headers=header)
             print('Регистрация на:', url_reg_week_train[j + 1])
             second_connection(url_reg_week_train[j + 1])
