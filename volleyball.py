@@ -24,7 +24,7 @@ DELTA_TRAINING = 100
 # Количество тренировок в неделе
 NUMBER_TRAINING = 7
 # задержка по времени при регистрации тренировок, секунд
-DELAY_REG = 10
+DELAY_REG = 7
 # задержка по времени между проверками наличия тренировки в первый раз
 DELAY_FIRST_CHECK = 10
 # задержка по времени между проверками наличия тренировки
@@ -75,6 +75,7 @@ def second_connection(url_reg):
 
 # функция регистрации на сайте
 def registration():
+    time.sleep(DELAY_REG)
     # регистрация на первой ожидаемой тренировке
     session.get(url_reg_week_train[0], headers=header)
     print('Регистрация на:', url_reg_week_train[0])
@@ -82,6 +83,8 @@ def registration():
     for j in range(NUMBER_TRAINING - 1):
         # проверка наличия следующих тренировок кроме первой
         if checking_training(url_week_train[j + 1], triggering_status):
+            # добавил задержку по времени регистрации на тренировках
+            time.sleep(DELAY_REG * (J + 1))
             session.get(url_reg_week_train[j + 1], headers=header)
             print('Регистрация на:', url_reg_week_train[j + 1])
             second_connection(url_reg_week_train[j + 1])
