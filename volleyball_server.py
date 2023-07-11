@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import requests
-import fake_useragent
+from fake_useragent import UserAgent
 from telegram.ext import Updater
 from smsru_api import SmsRu
 from decouple import config
@@ -44,7 +44,7 @@ DELTA_FAKE = 100
 # количестов строк, хранимых в файле информации о работе программы output.txt
 OUTPUT_STRING_NUMBER = 30
 # имя файла выходных данных о работае программы
-OUTPUT_FILE_CONST = 'output.txt'
+OUTPUT_FILE_CONST = 'output_1.txt'
 
 
 # функция получения Content-Lenght любой страницы
@@ -59,7 +59,7 @@ def write_status_messages(message):
 
 # функция авторизации второго логина
 def second_connection(url_reg):
-    user_second = fake_useragent.UserAgent().random
+    user_second = UserAgent().random
     header_second = {
       'user-agent': user_second
     }
@@ -72,11 +72,10 @@ def second_connection(url_reg):
     }
     # создание второй сессии при подключении к сайту
     session_second = requests.Session()
-    print('Отправляемся на вторую регистрацию')
+    write_status_messages('Отправляемся на вторую регистрацию %s' % url_reg)
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
     session_second.get(url_reg, headers=header)
-    print('Вторая регистрация:', url_reg)
 
 
 # функция регистрации на сайте
@@ -84,7 +83,7 @@ def registration():
     time.sleep(DELAY_REG)
     # регистрация на первой ожидаемой тренировке
     session.get(url_reg_week_train[0], headers=header)
-    print('Регистрация на:', url_reg_week_train[0])
+    write_status_messages('Регистрация на: %s' % url_reg_week_train[0])
     second_connection(url_reg_week_train[0])
     for j in range(NUMBER_TRAINING - 1):
         # проверка наличия следующих тренировок кроме первой
@@ -139,7 +138,7 @@ def checking_training(url_test, triggering_status):
 
 
 # создание юзер агента
-user = fake_useragent.UserAgent().random
+user = UserAgent().random
 header = {
       'user-agent': user
 }
@@ -156,7 +155,7 @@ f = open('number.txt')
 # последний номер документа с тренировкой
 last_number = int(f.read())
 f.close()
-write_status_messages('Номер последней тренировки  %s' %last_number)
+write_status_messages('Номер последней тренировки  %s' % last_number)
 # определяем chat_id, token, и сообщение для отправки в телеграм
 # при начале записи
 CHAT_ID_TELEGRAM_FIRST = config('CHAT_ID_TELEGRAM_FIRST', default='')
@@ -179,7 +178,6 @@ while True:
         # создание списка ожидаемых тренировок на ближайшую неделю
         # и создание списка страниц регистрации ожидаемых тренировок
         for i in range(NUMBER_TRAINING):
-            print(i)
             # формирование списка адресов ожидаемых тренировок
             url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
             # формирование списка адресов страницы регистрации первой ожидаемой
@@ -193,15 +191,18 @@ while True:
         session.post(LINK, data=data, headers=header)
         # cохранение текущего значения длины страницы cо всеми тренировками
         current_length = length_page(URL_TRAINING_LIST)
-        write_status_messages('начальная длина - %s' %current_length)
+        write_status_messages('начальная длина - %s' % current_length)
         # адрес последней существующей тренировки
         url_last = URL_TRAINING + str(last_number)
-        write_status_messages('адрес последней существующей тренировки %s' %url_last)
+        write_status_messages(
+            'адрес последней существующей тренировки %s' % url_last)
         # печать  длины последней существующей тренировки
-        write_status_messages('Длина последней тренировки %s' %length_page(url_last))
+        write_status_messages(
+            'Длина последней тренировки %s' % length_page(url_last))
         # формирование адреса точно несуществуюещей тренировки
         url_fake = URL_TRAINING + str(last_number + 1 + DELTA_FAKE)
-        write_status_messages('адрес точно несуществующей тренировки %s' %url_fake)
+        write_status_messages(
+            'адрес точно несуществующей тренировки %s' % url_fake)
         # получение Content-Length страницы с точно несуществующей тренировкой
         FAKE_LENGTH = length_page(url_fake)
         # получение длины первой ожидаемой тренировки
@@ -210,7 +211,7 @@ while True:
               new_length_training,
               new_length_training - FAKE_LENGTH > DELTA_TRAINING)
         print('длина первой возможной тренировки', new_length_training)
-        print('длина тренировки, которой точно не существует', FAKE_LENGTH )
+        print('длина тренировки, которой точно не существует', FAKE_LENGTH)
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
 import requests
-import fake_useragent
 import winsound
+from fake_useragent import UserAgent
 from tkinter import Tk, Label
 from threading import Thread
 from telegram.ext import Updater
@@ -53,7 +53,7 @@ def length_page(url_page):
 
 # функция авторизации второго логина
 def second_connection(url_reg):
-    user_second = fake_useragent.UserAgent().random
+    user_second = UserAgent().random
     header_second = {
       'user-agent': user_second
     }
@@ -150,7 +150,7 @@ def checking_training(url_test, triggering_status):
 
 
 # создание юзер агента
-user = fake_useragent.UserAgent().random
+user = UserAgent().random
 header = {
      'user-agent': user
 }
