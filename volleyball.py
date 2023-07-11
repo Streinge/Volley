@@ -53,9 +53,12 @@ def length_page(url_page):
 
 # функция авторизации второго логина
 def second_connection(url_reg):
-    user_second = fake_useragent.UserAgent().random
+    """user_second = fake_useragent.UserAgent().random
     header_second = {
       'user-agent': user_second
+    }"""
+    header_second = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
     }
     # данные для авторизации на сайте
     # здесь перевод кодировки логина
@@ -150,9 +153,12 @@ def checking_training(url_test, triggering_status):
 
 
 # создание юзер агента
-user = fake_useragent.UserAgent().random
+# user = fake_useragent.UserAgent().random
+# header = {
+#      'user-agent': user
+# }
 header = {
-      'user-agent': user
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
 }
 # данные для авторизации на сайте
 # здесь перевод кодировки логина
@@ -222,7 +228,7 @@ while True:
               new_length_training,
               new_length_training - FAKE_LENGTH > DELTA_TRAINING)
         print('длина первой возможной тренировки', new_length_training)
-        print('длина тренировки, которой точно не существует', FAKE_LENGTH )
+        print('длина тренировки, которой точно не существует', FAKE_LENGTH)
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
