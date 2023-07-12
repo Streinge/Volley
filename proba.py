@@ -14,37 +14,42 @@ from telegram.ext import Updater
 # количестов строк, хранимых в файле информации о работе программы output.txt
 OUTPUT_STRING_NUMBER = 3
 # имя файла выходных данных о работае программы
-OUTPUT_FILE_CONST = 'output_0.txt'
+OUTPUT_FILE_CONST = 'output_1.txt'
 
-day_status
 
-output_file = open(OUTPUT_FILE_CONST, 'w').close()
 def write_status_messages(message, day):
-    if day_status != day:
-
+    global day_file
+    global day_status
     file_name = 'output_%s.txt' % day
+    if day != day_status:
+        day_status = day
+        output_file = open(file_name, 'w').close()
+        with open('day_status.txt', 'w') as day_file: 
+            day_file.write(str(day))
+   
     with open(file_name, 'a') as output_file:
         output_file.write('\n' + message)
+        
 
 
-f = open('day_status.txt')
+with open('day_status.txt', 'r') as day_file:
+    day_string = day_file.read()
+if day_string == '':
+    day_status = 0
+else:
+    day_status = int(day_string)
 
-day_status = int(f.read())
-f.close()
-
-
-
+test = 35
 day = 1
 for i in range(10):
-    write_status_messages('Это сообщение состояния', day, day_status)
-day_status = day_status + 1
-with open('day_status.txt') as f:    
+    write_status_messages('Это сообщение состояния ', day)
+           
 day = 2
 for i in range(10):
-    write_status_messages('Это сообщение состояния', day, day_status)
-day_status = day_status + 1
-day = 3
-for i in range(10):
-    write_status_messages('Это сообщение состояния', day, day_status)
+    write_status_messages('Это сообщение состояния', day)
 
+day = 3
+
+for i in range(10):
+    write_status_messages('Это сообщение состояния', day)
 
