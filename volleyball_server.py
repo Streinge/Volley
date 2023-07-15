@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import time
 import requests
 from fake_useragent import UserAgent
 from telegram.ext import Updater
 from smsru_api import SmsRu
 from decouple import config
+from time import localtime, sleep, strftime
 
 # адрес сайта
 LINK = config('LINK', default='')
@@ -41,10 +41,6 @@ NUMBER_FIRST_CHECK = 3
 # то есть сколько прибавить к номеру последней тренировки
 # чтобы точно получить нереальный номер
 DELTA_FAKE = 100
-# количестов строк, хранимых в файле информации о работе программы output.txt
-OUTPUT_STRING_NUMBER = 30
-# имя файла выходных данных о работае программы
-OUTPUT_FILE_CONST = 'output_1.txt'
 
 
 # функция получения Content-Lenght любой страницы
@@ -52,13 +48,36 @@ def length_page(url_page):
     return int(session.get(url_page, stream=True).headers['Content-Length'])
 
 
-def write_status_messages(message):
-    with open(OUTPUT_FILE_CONST, 'a') as output_file:
+# функция записывает в файл логи
+# на вход получает сообщение записываемое и день недели
+# 1 - это понедельник, 7 - это воскресенье
+# результ - строка записанная в фалы логов
+# запись ведется в 7 файлов, каждый соответствует дню недели
+
+
+def write_status_messages(message, day):
+    # переменная с именем файла для хранения переменной текущего дня
+    global day_file
+    # переменная со значением текущего дня
+    global day_status
+    # имя файла формируется в зависимости от дня недели
+    file_name = 'output_%s.txt' % day
+    # проверяется, если день недели изменился, то стирается
+    # файл за прошлую неделю и меняется значение текущего дня
+    # и новое значение записывается в файл (на случай внезапной остановки)
+    if day != day_status:
+        day_status = day
+        output_file = open(file_name, 'w').close()
+        with open('day_status.txt', 'w') as day_file:
+            day_file.write(str(day))
+    # проводится запись в конец файла с переводом строки (построчно)
+    with open(file_name, 'a') as output_file:
         output_file.write('\n' + message)
 
 
 # функция авторизации второго логина
 def second_connection(url_reg):
+    global week_day
     user_second = UserAgent().random
     header_second = {
       'user-agent': user_second
@@ -72,7 +91,8 @@ def second_connection(url_reg):
     }
     # создание второй сессии при подключении к сайту
     session_second = requests.Session()
-    write_status_messages('Отправляемся на вторую регистрацию %s' % url_reg)
+    write_status_messages('Go on second registration %s' % url_reg,
+                          week_day)
     # передача данных для авторизации
     session_second.post(LINK, data=data_second, headers=header_second).headers
     session_second.get(url_reg, headers=header)
@@ -80,21 +100,24 @@ def second_connection(url_reg):
 
 # функция регистрации на сайте
 def registration():
-    time.sleep(DELAY_REG)
+    global week_day
+    sleep(DELAY_REG)
     # регистрация на первой ожидаемой тренировке
     session.get(url_reg_week_train[0], headers=header)
-    write_status_messages('Регистрация на: %s' % url_reg_week_train[0])
+    write_status_messages('Registration on: %s' % url_reg_week_train[0],
+                          week_day)
     second_connection(url_reg_week_train[0])
     for j in range(NUMBER_TRAINING - 1):
         # проверка наличия следующих тренировок кроме первой
         if checking_training(url_week_train[j + 1], triggering_status):
             # добавил задержку по времени регистрации на тренировках
-            time.sleep(DELAY_REG * (j + 1))
+            sleep(DELAY_REG * (j + 1))
             session.get(url_reg_week_train[j + 1], headers=header)
-            print('Регистрация на:', url_reg_week_train[j + 1])
+            write_status_messages('Registration on:: %s'
+                                  % url_reg_week_train[j + 1], week_day)
             second_connection(url_reg_week_train[j + 1])
             continue
-    print('Регистрация завершена')
+    write_status_messages('Registration is over!:', week_day)
 
 
 # функция для отправки сообщения  в телеграм
@@ -115,25 +138,27 @@ def send_SMS():
 
 # функция проверки наличия тренировки
 def checking_training(url_test, triggering_status):
-    print('Проверяю ', url_test)
+    write_status_messages('Check %s' % url_test, week_day)
     if triggering_status:
         while True:
             if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
-                print('Тренировка: ', url_test, 'появилась')
+                write_status_messages('The training appeared: %s' % url_test,
+                                      week_day)
                 return True
             else:
-                time.sleep(DELAY_CHECK)
-                print('Проверяю ', url_test)
+                sleep(DELAY_CHECK)
+                write_status_messages('Check %s' % url_test, week_day)
     else:
         for i in range(NUMBER_FIRST_CHECK):
             if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
-                print('Тренировка: ', url_test, 'появилась')
+                write_status_messages('The training appeared: %s' % url_test,
+                                      week_day)
                 triggering_status = True
                 return True
             else:
-                time.sleep(DELAY_FIRST_CHECK)
-                print('Проверяю ', url_test)
-    print('Это ложное срабатывание')
+                sleep(DELAY_FIRST_CHECK)
+                write_status_messages('Check %s' % url_test, week_day)
+    print('This is a false positive')
     return False
 
 
@@ -150,12 +175,24 @@ data = {
      'login': 'submit'
 
 }
+# в начале работы программы получаем значение текущего дня
+with open('day_status.txt', 'r') as day_file:
+    day_string = day_file.read()
+# проверка условия, если файл пустой то присваивается ноль
+# чтобы не было ошибки int()
+if day_string == '':
+    day_status = 0
+else:
+    day_status = int(day_string)
+# получаем номер дня недели
+# день недели плюс 1, потому что по умолчанию начинается с 0
+week_day = week_day = localtime().tm_wday + 1
 # открытие файла с номером последней тренировки
 f = open('number.txt')
 # последний номер документа с тренировкой
 last_number = int(f.read())
 f.close()
-write_status_messages('Номер последней тренировки  %s' % last_number)
+write_status_messages('Nunber of last training  %s' % last_number, week_day)
 # определяем chat_id, token, и сообщение для отправки в телеграм
 # при начале записи
 CHAT_ID_TELEGRAM_FIRST = config('CHAT_ID_TELEGRAM_FIRST', default='')
@@ -165,7 +202,7 @@ MESSAGE_FIRST = 'Запись! Запись! Запись!'
 CHAT_ID_TELEGRAM_SEC = config('CHAT_ID_TELEGRAM_SEC', default='')
 TOKEN_TELEGRAM_SEC = config('TOKEN_TELEGRAM_SEC', default='')
 # сообщение в телеграм о неполадках
-MESSAGE_SEC = 'Что-то пошло не так!'
+MESSAGE_SEC = 'Something went wrong!'
 
 while True:
     try:
@@ -183,81 +220,121 @@ while True:
             # формирование списка адресов страницы регистрации первой ожидаемой
             # тренировки
             url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
-            write_status_messages(url_week_train[i])
-            write_status_messages(url_reg_week_train[i])
+            write_status_messages(url_week_train[i], week_day)
+            write_status_messages(url_reg_week_train[i], week_day)
         # создание сессии при подключении к сайту
         session = requests.Session()
         # передача данных для авторизации
         session.post(LINK, data=data, headers=header)
         # cохранение текущего значения длины страницы cо всеми тренировками
         current_length = length_page(URL_TRAINING_LIST)
-        write_status_messages('начальная длина - %s' % current_length)
+        write_status_messages('Initial length - %s' % current_length,
+                              week_day)
         # адрес последней существующей тренировки
         url_last = URL_TRAINING + str(last_number)
         write_status_messages(
-            'адрес последней существующей тренировки %s' % url_last)
+            'URL of the last existing workout %s' % url_last, week_day)
         # печать  длины последней существующей тренировки
         write_status_messages(
-            'Длина последней тренировки %s' % length_page(url_last))
+            'The length of the last workout %s' % length_page(url_last),
+            week_day)
         # формирование адреса точно несуществуюещей тренировки
         url_fake = URL_TRAINING + str(last_number + 1 + DELTA_FAKE)
         write_status_messages(
-            'адрес точно несуществующей тренировки %s' % url_fake)
+            'the URL of a non-existent workout for sure %s' % url_fake,
+            week_day)
         # получение Content-Length страницы с точно несуществующей тренировкой
         FAKE_LENGTH = length_page(url_fake)
         # получение длины первой ожидаемой тренировки
         new_length_training = length_page(url_week_train[0])
-        print(url_week_train[0],
-              new_length_training,
-              new_length_training - FAKE_LENGTH > DELTA_TRAINING)
-        print('длина первой возможной тренировки', new_length_training)
-        print('длина тренировки, которой точно не существует', FAKE_LENGTH)
+        str_temp = (url_week_train[0] + ' length ' + str(new_length_training)
+                    + ' ' + str((new_length_training - FAKE_LENGTH) >
+                                DELTA_TRAINING))
+        write_status_messages(str_temp, week_day)
+        write_status_messages('length of the first possible workout %s' %
+                              new_length_training, week_day)
+        write_status_messages(
+            'the length of the shadow, which definitely does not exist %s' %
+            FAKE_LENGTH, week_day)
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
-                time.sleep(DELAY_LIST)
-                # сохраняем новое значение длинны страницы с тренировками
-                new_current_length = length_page(URL_TRAINING_LIST)
-                print('новая длина', new_current_length)
-                # функция возвращает локальное время в виде кортежа
-                t = time.localtime()
-                # функция преорбразует кортеж в строку с часами и минутами
-                current_time = time.strftime("%H:%M:%S", t)
-                # выводим время, старое и новое значение длины и их разницу
-                print(current_time, ' ', new_current_length,
-                      '-', current_length, '=',
-                      new_current_length - current_length)
-                # выводит булево значение разницы и заданой дельты
-                print(new_current_length - current_length
-                      > DELTA_LIST)
-                if new_current_length - current_length > DELTA_LIST:
-                    print('произошли изменения')
-                    # запуск функции проверки наличия тренировки
-                    if checking_training(url_week_train[0], triggering_status):
-                        # запуск функции отправки СМС
-                        send_SMS()
-                        # запуск функции отправки сообщения в Телеграмм
-                        message(CHAT_ID_TELEGRAM_FIRST, TOKEN_TELEGRAM_FIRST,
-                                MESSAGE_FIRST)
-                        # запуск функции регистрации
-                        registration()
-                        # меняем номер последнее тренировки
-                        last_number += NUMBER_TRAINING
-                        print('Номер последней тренировки изменился',
-                              last_number)
-                        # запись в файл нового значения
-                        # последней тренировки
-                        f = open('number.txt', 'w')
-                        f.write(str(last_number))
-                        f.close()
-                        print('Номер записался в файл')
-                        break
+                print('Начали')
+                # получаем номер дня недели
+                # день недели плюс 1, потому что по умолчанию начинается с 0
+                week_day = localtime().tm_wday + 1
+                # получаем текущюу минуту локального времени
+                current_minute = localtime().tm_min
+                fixed_minute = current_minute
+                # здесь реализовал бесконечный цикла с проверкой времени по
+                # минутам это аналог того, что делается по часам
+                # программа начинает работу через минуту и заканчивает через 2
+                # минуты но дальше продолжает работать и ждать по идее утра,
+                # когда будет 8 часов Это по замыслу
+                while True:
+                    current_minute = localtime().tm_min
+                    if (current_minute >= fixed_minute + 1) and (current_minute
+                                                                 < fixed_minute
+                                                                 + 3):
+                        print('Started working')
+                        # сохраняем значение длины страницы с тренировками
+                        new_current_length = length_page(URL_TRAINING_LIST)
+                        write_status_messages('New length %s' %
+                                              new_current_length, week_day)
+                        sleep(DELAY_LIST)
+                        # функция возвращает локальное время в виде кортежа
+                        t = localtime()
+                        # функция преорбразует кортеж в строку с часами и
+                        # минутами
+                        current_time = strftime("%H:%M:%S", t)
+                        # выводим время, старое и новое значение длины
+                        # и их разницу
+                        str_temp = (str(current_time) + ' ' +
+                                    str(new_current_length) + '-' +
+                                    str(current_length) + '=' +
+                                    str(new_current_length - current_length))
+                        write_status_messages(str_temp, week_day)
+                        # выводит булево значение разницы и заданой дельты
+                        write_status_messages(str(new_current_length -
+                                              current_length > DELTA_LIST),
+                                              week_day)
+                        if new_current_length - current_length > DELTA_LIST:
+                            write_status_messages('There have been changes',
+                                                  week_day)
+                            # запуск функции проверки наличия тренировки
+                            if checking_training(url_week_train[0],
+                                                 triggering_status):
+                                # запуск функции отправки СМС
+                                send_SMS()
+                                # запуск функции отправки сообщения в Телеграмм
+                                message(CHAT_ID_TELEGRAM_FIRST,
+                                        TOKEN_TELEGRAM_FIRST, MESSAGE_FIRST)
+                                # запуск функции регистрации
+                                registration()
+                                # меняем номер последнее тренировки
+                                last_number += NUMBER_TRAINING
+                                str_temp = ('Number last training is changed '
+                                            + str(last_number))
+                                write_status_messages(str_temp, week_day)
+                                # запись в файл нового значения
+                                # последней тренировки
+                                f = open('number.txt', 'w')
+                                f.write(str(last_number))
+                                f.close()
+                                write_status_messages(
+                                    'Number writed at file %s' % week_day)
+                                break
+                            else:
+                                write_status_messages(
+                                    'Continue wait changes %s' % week_day)
+                        current_length = new_current_length
+                        write_status_messages(
+                            'New length now = %s' % current_length, week_day)
                     else:
-                        print('Продолжаем ждать изменения')
-                current_length = new_current_length
-                print('Новая длина сейчас =', current_length)
+                        sleep(1)
+                        print('Wait, ' + str(current_minute))
             except Exception as e:
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, MESSAGE_SEC)
-                print('error', e)
+                write_status_messages('error %s' % e, week_day)
     except Exception:
-        print('Что то пошло не так')
+        write_status_messages('Something went wrong', week_day)

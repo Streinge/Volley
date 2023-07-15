@@ -1,0 +1,39 @@
+
+Nunber of last training  3959
+https://sportforus.ru/wv/training/3960
+https://sportforus.ru/wv/training/reg/3960
+https://sportforus.ru/wv/training/3961
+https://sportforus.ru/wv/training/reg/3961
+https://sportforus.ru/wv/training/3962
+https://sportforus.ru/wv/training/reg/3962
+https://sportforus.ru/wv/training/3963
+https://sportforus.ru/wv/training/reg/3963
+https://sportforus.ru/wv/training/3964
+https://sportforus.ru/wv/training/reg/3964
+https://sportforus.ru/wv/training/3965
+https://sportforus.ru/wv/training/reg/3965
+https://sportforus.ru/wv/training/3966
+https://sportforus.ru/wv/training/reg/3966
+Initial length - 33158
+URL of the last existing workout https://sportforus.ru/wv/training/3959
+The length of the last workout 13149
+the URL of a non-existent workout for sure https://sportforus.ru/wv/training/4060
+https://sportforus.ru/wv/training/3960 length 9384 False
+length of the first possible workout 9384
+the length of the shadow, which definitely does not exist 9384
+New length 33158
+00:11:30 33158-33158=0
+False
+New length now = 33158
+New length 33158
+00:12:00 33158-33158=0
+False
+New length now = 33158
+New length 33158
+00:12:31 33158-33158=0
+False
+New length now = 33158
+New length 33158
+00:13:02 33158-33158=0
+False
+New length now = 33158
