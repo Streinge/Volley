@@ -53,7 +53,7 @@ else:
 
 current_year = localtime().tm_year
 current_month = localtime().tm_mon
-current_day = localtime().tm_mon
+current_day = localtime().tm_mday
 current_hour = localtime().tm_hour
 # получаем номер дня недели
 # день недели плюс 1, потому что по умолчанию начинается с 0
