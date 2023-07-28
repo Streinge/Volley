@@ -167,10 +167,15 @@ def checking_training(url_test, triggering_status):
     print('This is a false positive')
     return False
 
+
 def send_into_telegram_current_time(send_message):
     current_year = localtime().tm_year
     current_month = localtime().tm_mon
     current_day = localtime().tm_mday
+    t = localtime()
+    # функция преорбразует кортеж в строку с часами и
+    # минутами
+    current_time = strftime("%H:%M:%S", t)
     str_temp = (str(current_day) + '.' +
                 str(current_month) + '.' +
                 str(current_year) + ' ' +
@@ -275,12 +280,13 @@ while True:
             FAKE_LENGTH, week_day)
         # hour_status переменная, которая хранит значение часа на которое 
         # уже выводилось значение о печати статус сообщения в Телеграм
-        hour_status = 0
+        hour_status = 23
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
                 print('GO! GO! GO!')
-                message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, 'GO! GO! GO!')
+                message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC,
+                        'GO! GO! GO!')
                 # получаем номер дня недели
                 # день недели плюс 1, потому что по умолчанию начинается с 0
                 week_day = localtime().tm_wday + 1
@@ -288,16 +294,16 @@ while True:
                 # current_minute = localtime().tm_min
                 # fixed_minute = current_minute
                 # здесь реализовал бесконечный цикла с проверкой времени:
-                # программа начинает работу 8 часов утра  и заканчивает в 20 часов
+                # программа начинает работу 8 часов и заканчивает в 20 часов
                 # минуты но дальше продолжает работать и ждать по идее утра
                 while True:
                     # получаем текущий час локального времени
                     current_hour = localtime().tm_hour + OFFSET_UTC
                     # current_minute = localtime().tm_min
-                    if (current_hour >= START_HOUR) and (current_hour <= FINISH_HOUR):
-                    # if (current_minute >= fixed_minute + 1) and (current_minute
-                    #                                             < fixed_minute
-                    #                                             + 5):
+                    if (current_hour >= START_HOUR) and (current_hour <=
+                                                         FINISH_HOUR):
+                        # if (current_minute >= fixed_minute + 1) and 
+                        # (current_minute < fixed_minute + 5):
                         # сохраняем значение длины страницы с тренировками
                         new_current_length = length_page(URL_TRAINING_LIST)
                         write_status_messages('New length %s' %
@@ -315,8 +321,8 @@ while True:
                                     str(current_length) + '=' +
                                     str(new_current_length - current_length))
                         write_status_messages(str_temp, week_day)
-                        # условие чтобы один раз в час печаталось сообщение 
-                        # в Телеграмм о том что программа работает - изменений нет
+                        # условие чтобы один раз в час печаталось сообщение
+                        # в Телеграмм что программа работает - изменений нет
                         if current_hour != hour_status:
                             send_into_telegram_current_time('We are waiting for new training sessions')
                             hour_status = current_hour
