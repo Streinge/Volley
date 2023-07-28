@@ -42,7 +42,7 @@ NUMBER_FIRST_CHECK = 3
 # чтобы точно получить нереальный номер
 DELTA_FAKE = 100
 # сдвиг по времени с учетом часового пояса
-OFFSET_UTC = 2
+OFFSET_UTC = 0
 # значение часа локального время начало работы
 START_HOUR = 8
 # значение часа локального время начало работы
@@ -167,6 +167,17 @@ def checking_training(url_test, triggering_status):
     print('This is a false positive')
     return False
 
+def send_into_telegram_current_time(send_message):
+    current_year = localtime().tm_year
+    current_month = localtime().tm_mon
+    current_day = localtime().tm_mday
+    str_temp = (str(current_day) + '.' +
+                str(current_month) + '.' +
+                str(current_year) + ' ' +
+                str(current_time) + ' ' + send_message)
+    message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, str_temp)
+    write_status_messages(str_temp, week_day)
+
 
 # создание юзер агента
 user = UserAgent().random
@@ -264,7 +275,7 @@ while True:
             FAKE_LENGTH, week_day)
         # hour_status переменная, которая хранит значение часа на которое 
         # уже выводилось значение о печати статус сообщения в Телеграм
-        minute_status = 0
+        hour_status = 0
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
@@ -273,22 +284,19 @@ while True:
                 # день недели плюс 1, потому что по умолчанию начинается с 0
                 week_day = localtime().tm_wday + 1
                 # получаем текущюу минуту локального времени
-                current_minute = localtime().tm_min
-                fixed_minute = current_minute
-                # здесь реализовал бесконечный цикла с проверкой времени по
-                # минутам это аналог того, что делается по часам
-                # программа начинает работу через минуту и заканчивает через 2
-                # минуты но дальше продолжает работать и ждать по идее утра,
-                # когда будет 8 часов Это по замыслу
+                # current_minute = localtime().tm_min
+                # fixed_minute = current_minute
+                # здесь реализовал бесконечный цикла с проверкой времени:
+                # программа начинает работу 8 часов утра  и заканчивает в 20 часов
+                # минуты но дальше продолжает работать и ждать по идее утра
                 while True:
                     # получаем текущий час локального времени
-                    # current_hour = localtime().tm_hour + OFFSET_UTC
-                    current_minute = localtime().tm_min
-                    # if (current_hour >= START_HOUR) and (current_hour <= FINISH_HOUR):
-                    if (current_minute >= fixed_minute + 1) and (current_minute
-                                                                 < fixed_minute
-                                                                 + 5):
-                        print('Started working')
+                    current_hour = localtime().tm_hour + OFFSET_UTC
+                    # current_minute = localtime().tm_min
+                    if (current_hour >= START_HOUR) and (current_hour <= FINISH_HOUR):
+                    # if (current_minute >= fixed_minute + 1) and (current_minute
+                    #                                             < fixed_minute
+                    #                                             + 5):
                         # сохраняем значение длины страницы с тренировками
                         new_current_length = length_page(URL_TRAINING_LIST)
                         write_status_messages('New length %s' %
@@ -308,17 +316,9 @@ while True:
                         write_status_messages(str_temp, week_day)
                         # условие чтобы один раз в час печаталось сообщение 
                         # в Телеграмм о том что программа работает - изменений нет
-                        if current_minute != minute_status:
-                            current_year = localtime().tm_year
-                            current_month = localtime().tm_mon
-                            current_day = localtime().tm_mday
-                            str_temp = (str(current_day) + '.' +
-                                        str(current_month) + '.' +
-                                        str(current_year) + '  ' +
-                                        str(current_time))
-                            message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, str_temp)
-                            write_status_messages(str_temp, week_day)
-                            minute_status = current_minute
+                        if current_hour != hour_status:
+                            send_into_telegram_current_time('We are waiting for new training sessions')
+                            hour_status = current_hour
                         # выводит булево значение разницы и заданой дельты
                         write_status_messages(str(new_current_length -
                                               current_length > DELTA_LIST),
@@ -356,8 +356,13 @@ while True:
                         write_status_messages(
                             'New length now = %s' % current_length, week_day)
                     else:
-                        sleep(10)
-                        message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, 'Ожидаем...')
+                        # получаем текущий час локального времени
+                        current_hour = localtime().tm_hour + OFFSET_UTC
+                        # каждые 60 секунд проверяется статус рабочего времени
+                        sleep(60)
+                        if current_hour != hour_status:
+                            send_into_telegram_current_time('Waiting for the morning')
+                            hour_status = current_hour
             except Exception as e:
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, MESSAGE_SEC)
                 write_status_messages('error %s' % e, week_day)
