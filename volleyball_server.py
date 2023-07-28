@@ -279,6 +279,7 @@ while True:
         # цикл проверки изменения размеры страницы с тренировками
         while True:
             try:
+                print('GO! GO! GO!')
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, 'GO! GO! GO!')
                 # получаем номер дня недели
                 # день недели плюс 1, потому что по умолчанию начинается с 0
@@ -319,6 +320,7 @@ while True:
                         if current_hour != hour_status:
                             send_into_telegram_current_time('We are waiting for new training sessions')
                             hour_status = current_hour
+                            print(str_temp + 'We are waiting for new training sessions')
                         # выводит булево значение разницы и заданой дельты
                         write_status_messages(str(new_current_length -
                                               current_length > DELTA_LIST),
@@ -362,6 +364,7 @@ while True:
                         sleep(60)
                         if current_hour != hour_status:
                             send_into_telegram_current_time('Waiting for the morning')
+                            print('Waiting for the morning')
                             hour_status = current_hour
             except Exception as e:
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, MESSAGE_SEC)
