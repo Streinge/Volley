@@ -355,11 +355,11 @@ while True:
                                 f.write(str(last_number))
                                 f.close()
                                 write_status_messages(
-                                    'Number writed at file %s' % week_day)
+                                    'Number writed at file', week_day)
                                 break
                             else:
                                 write_status_messages(
-                                    'Continue wait changes %s' % week_day)
+                                    'Continue wait changes..', week_day)
                         current_length = new_current_length
                         write_status_messages(
                             'New length now = %s' % current_length, week_day)
@@ -373,7 +373,13 @@ while True:
                             print('Waiting for the morning')
                             hour_status = current_hour
             except Exception as e:
+                # сообщения об ошибке выводятся с задержкой 120 секунд
+                # чтобы не перполнялся файл логов и чат Телеграм
+                sleep(120)
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, MESSAGE_SEC)
                 write_status_messages('error %s' % e, week_day)
     except Exception:
+        # сообщения об ошибке выводятся с задержкой 120 секунд
+        # чтобы не перполнялся файл логов
+        sleep(120)
         write_status_messages('Something went wrong', week_day)
