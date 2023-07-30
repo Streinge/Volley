@@ -278,7 +278,7 @@ while True:
         write_status_messages(
             'the length of the shadow, which definitely does not exist %s' %
             FAKE_LENGTH, week_day)
-        # hour_status переменная, которая хранит значение часа на которое 
+        # hour_status переменная, которая хранит значение часа на которое
         # уже выводилось значение о печати статус сообщения в Телеграм
         hour_status = 23
         # цикл проверки изменения размеры страницы с тренировками
@@ -302,7 +302,7 @@ while True:
                     # current_minute = localtime().tm_min
                     if (current_hour >= START_HOUR) and (current_hour <=
                                                          FINISH_HOUR):
-                        # if (current_minute >= fixed_minute + 1) and 
+                        # if (current_minute >= fixed_minute + 1) and
                         # (current_minute < fixed_minute + 5):
                         # сохраняем значение длины страницы с тренировками
                         new_current_length = length_page(URL_TRAINING_LIST)
@@ -324,9 +324,11 @@ while True:
                         # условие чтобы один раз в час печаталось сообщение
                         # в Телеграмм что программа работает - изменений нет
                         if current_hour != hour_status:
-                            send_into_telegram_current_time('We are waiting for new training sessions')
+                            send_into_telegram_current_time(
+                                'We are waiting for new training sessions')
                             hour_status = current_hour
-                            print(str_temp + 'We are waiting for new training sessions')
+                            print(str_temp +
+                                  'We are waiting for new training sessions')
                         # выводит булево значение разницы и заданой дельты
                         write_status_messages(str(new_current_length -
                                               current_length > DELTA_LIST),
@@ -369,7 +371,8 @@ while True:
                         # каждые 60 секунд проверяется статус рабочего времени
                         sleep(60)
                         if current_hour != hour_status:
-                            send_into_telegram_current_time('Waiting for the morning')
+                            send_into_telegram_current_time(
+                                'Waiting for the morning')
                             print('Waiting for the morning')
                             hour_status = current_hour
             except Exception as e:
