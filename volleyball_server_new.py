@@ -208,7 +208,7 @@ else:
     day_status = int(day_string)
 # получаем номер дня недели
 # день недели плюс 1, потому что по умолчанию начинается с 0
-week_day = week_day = localtime().tm_wday + 1
+week_day = localtime().tm_wday + 1
 # открытие файла с номером последней тренировки
 f = open('number.txt')
 # последний номер документа с тренировкой
@@ -287,9 +287,6 @@ while True:
                 print('GO! GO! GO!')
                 message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC,
                         'GO! GO! GO!')
-                # получаем номер дня недели
-                # день недели плюс 1, потому что по умолчанию начинается с 0
-                week_day = localtime().tm_wday + 1
                 # получаем текущюу минуту локального времени
                 # current_minute = localtime().tm_min
                 # fixed_minute = current_minute
@@ -297,6 +294,9 @@ while True:
                 # программа начинает работу 8 часов и заканчивает в 20 часов
                 # минуты но дальше продолжает работать и ждать по идее утра
                 while True:
+                    # получаем номер дня недели
+                    # день недели плюс 1, потому что по умолчанию начинается с 0
+                    week_day = localtime().tm_wday + 1
                     # получаем текущий час локального времени
                     current_hour = localtime().tm_hour + OFFSET_UTC
                     # current_minute = localtime().tm_min
