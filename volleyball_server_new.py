@@ -184,6 +184,24 @@ def send_into_telegram_current_time(send_message):
     write_status_messages(str_temp, week_day)
 
 
+def fill_training_list(last_number):
+    global url_week_train
+    global url_reg_week_train
+    url_week_train = []
+    # список адресов страниц регистрации ожидаемых тренировок
+    url_reg_week_train = []
+    # создание списка ожидаемых тренировок на ближайшую неделю
+    # и создание списка страниц регистрации ожидаемых тренировок
+    for i in range(NUMBER_TRAINING):
+        # формирование списка адресов ожидаемых тренировок
+        url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
+        # формирование списка адресов страницы регистрации первой ожидаемой
+        # тренировки
+        url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
+        write_status_messages(url_week_train[i], week_day)
+        write_status_messages(url_reg_week_train[i], week_day)
+
+
 # создание юзер агента
 user = UserAgent().random
 header = {
@@ -231,19 +249,7 @@ while True:
         # задает переменную состояния, появилась или нет ожидаемая тренировка
         triggering_status = False
         # список адресов ожидаемых тренировок
-        url_week_train = []
-        # список адресов страниц регистрации ожидаемых тренировок
-        url_reg_week_train = []
-        # создание списка ожидаемых тренировок на ближайшую неделю
-        # и создание списка страниц регистрации ожидаемых тренировок
-        for i in range(NUMBER_TRAINING):
-            # формирование списка адресов ожидаемых тренировок
-            url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
-            # формирование списка адресов страницы регистрации первой ожидаемой
-            # тренировки
-            url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
-            write_status_messages(url_week_train[i], week_day)
-            write_status_messages(url_reg_week_train[i], week_day)
+        fill_training_list(last_number)
         # создание сессии при подключении к сайту
         session = requests.Session()
         # передача данных для авторизации
@@ -358,6 +364,7 @@ while True:
                                 f.close()
                                 write_status_messages(
                                     'Number writed at file', week_day)
+                                fill_training_list(last_number)
                                 break
                             else:
                                 write_status_messages(
