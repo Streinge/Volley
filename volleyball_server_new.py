@@ -131,18 +131,10 @@ def send_SMS():
 
 
 # функция проверки наличия тренировки
-def checking_training(url_test, triggering_status):
+def checking_training(url_test):
+    global triggering_status
     write_status_messages('Check %s' % url_test, week_day)
-    if triggering_status:
-        while True:
-            if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
-                write_status_messages('The training appeared: %s' % url_test,
-                                      week_day)
-                return True
-            else:
-                sleep(DELAY_CHECK)
-                write_status_messages('Check %s' % url_test, week_day)
-    else:
+    for i in range(NUMBER_FIRST_CHECK):
         if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
             write_status_messages('The training appeared: %s' % url_test,
                                   week_day)
@@ -152,6 +144,7 @@ def checking_training(url_test, triggering_status):
             sleep(DELAY_FIRST_CHECK)
             write_status_messages('Check %s' % url_test, week_day)
     print('This is a false positive')
+    triggering_status = False
     return False
 
 
@@ -288,7 +281,10 @@ while True:
                         new_current_length = length_page(URL_TRAINING_LIST)
                         write_status_messages('New length %s' %
                                               new_current_length, week_day)
-                        sleep(DELAY_LIST)
+                        if triggering_status:
+                            sleep(DELAY_CHECK)
+                        else:
+                            sleep(DELAY_LIST)
                         # функция возвращает локальное время в виде кортежа
                         t = localtime()
                         # функция преорбразует кортеж в строку с часами и
@@ -317,8 +313,7 @@ while True:
                             write_status_messages('There have been changes',
                                                   week_day)
                             # запуск функции проверки наличия тренировки
-                            if checking_training(url_week_train,
-                                                 triggering_status):
+                            if checking_training(url_week_train):
                                 # запуск функции отправки СМС
                                 send_SMS()
                                 # запуск функции отправки сообщения в Телеграмм
