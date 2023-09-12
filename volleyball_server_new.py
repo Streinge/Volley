@@ -107,23 +107,11 @@ def second_connection(url_reg):
 # функция регистрации на сайте
 def registration():
     global week_day
-    sleep(DELAY_REG)
     # регистрация на первой ожидаемой тренировке
-    session.get(url_reg_week_train[0], headers=header)
-    write_status_messages('Registration on: %s' % url_reg_week_train[0],
+    session.get(url_reg_week_train, headers=header)
+    write_status_messages('Registration on: %s' % url_reg_week_train,
                           week_day)
-    second_connection(url_reg_week_train[0])
-    for j in range(NUMBER_TRAINING - 1):
-        # проверка наличия следующих тренировок кроме первой
-        if checking_training(url_week_train[j + 1], triggering_status):
-            # добавил задержку по времени регистрации на тренировках
-            sleep(DELAY_REG * (j + 1))
-            session.get(url_reg_week_train[j + 1], headers=header)
-            write_status_messages('Registration on:: %s'
-                                  % url_reg_week_train[j + 1], week_day)
-            second_connection(url_reg_week_train[j + 1])
-            continue
-    write_status_messages('Registration is over!:', week_day)
+    second_connection(url_reg_week_train)
 
 
 # функция для отправки сообщения  в телеграм
@@ -155,15 +143,14 @@ def checking_training(url_test, triggering_status):
                 sleep(DELAY_CHECK)
                 write_status_messages('Check %s' % url_test, week_day)
     else:
-        for i in range(NUMBER_FIRST_CHECK):
-            if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
-                write_status_messages('The training appeared: %s' % url_test,
-                                      week_day)
-                triggering_status = True
-                return True
-            else:
-                sleep(DELAY_FIRST_CHECK)
-                write_status_messages('Check %s' % url_test, week_day)
+        if length_page(url_test) - FAKE_LENGTH > DELTA_TRAINING:
+            write_status_messages('The training appeared: %s' % url_test,
+                                  week_day)
+            triggering_status = True
+            return True
+        else:
+            sleep(DELAY_FIRST_CHECK)
+            write_status_messages('Check %s' % url_test, week_day)
     print('This is a false positive')
     return False
 
@@ -182,24 +169,6 @@ def send_into_telegram_current_time(send_message):
                 str(current_time) + ' ' + send_message)
     message(CHAT_ID_TELEGRAM_SEC, TOKEN_TELEGRAM_SEC, str_temp)
     write_status_messages(str_temp, week_day)
-
-
-def fill_training_list(last_number):
-    global url_week_train
-    global url_reg_week_train
-    url_week_train = []
-    # список адресов страниц регистрации ожидаемых тренировок
-    url_reg_week_train = []
-    # создание списка ожидаемых тренировок на ближайшую неделю
-    # и создание списка страниц регистрации ожидаемых тренировок
-    for i in range(NUMBER_TRAINING):
-        # формирование списка адресов ожидаемых тренировок
-        url_week_train.append(URL_TRAINING + str(last_number + 1 + i))
-        # формирование списка адресов страницы регистрации первой ожидаемой
-        # тренировки
-        url_reg_week_train.append(URL_REG + str(last_number + 1 + i))
-        write_status_messages(url_week_train[i], week_day)
-        write_status_messages(url_reg_week_train[i], week_day)
 
 
 # создание юзер агента
@@ -248,8 +217,13 @@ while True:
     try:
         # задает переменную состояния, появилась или нет ожидаемая тренировка
         triggering_status = False
-        # список адресов ожидаемых тренировок
-        fill_training_list(last_number)
+        # адрес страницы первой ожидаемой тренировки
+        url_week_train = URL_TRAINING + str(last_number + 1)
+        # адрес страницs регистрации первой ожидаемой тренировки
+        url_reg_week_train = URL_REG + str(last_number + 1)
+        # создание списка ожидаемых тренировок на ближайшую неделю
+        write_status_messages(url_week_train, week_day)
+        write_status_messages(url_reg_week_train, week_day)
         # создание сессии при подключении к сайту
         session = requests.Session()
         # передача данных для авторизации
@@ -274,8 +248,8 @@ while True:
         # получение Content-Length страницы с точно несуществующей тренировкой
         FAKE_LENGTH = length_page(url_fake)
         # получение длины первой ожидаемой тренировки
-        new_length_training = length_page(url_week_train[0])
-        str_temp = (url_week_train[0] + ' length ' + str(new_length_training)
+        new_length_training = length_page(url_week_train)
+        str_temp = (url_week_train + ' length ' + str(new_length_training)
                     + ' ' + str((new_length_training - FAKE_LENGTH) >
                                 DELTA_TRAINING))
         write_status_messages(str_temp, week_day)
@@ -343,7 +317,7 @@ while True:
                             write_status_messages('There have been changes',
                                                   week_day)
                             # запуск функции проверки наличия тренировки
-                            if checking_training(url_week_train[0],
+                            if checking_training(url_week_train,
                                                  triggering_status):
                                 # запуск функции отправки СМС
                                 send_SMS()
@@ -352,8 +326,8 @@ while True:
                                         TOKEN_TELEGRAM_FIRST, MESSAGE_FIRST)
                                 # запуск функции регистрации
                                 registration()
-                                # меняем номер последнее тренировки
-                                last_number += NUMBER_TRAINING
+                                # увеличиваем номер последней тренировки на единицу
+                                last_number += 1
                                 str_temp = ('Number last training is changed '
                                             + str(last_number))
                                 write_status_messages(str_temp, week_day)
@@ -364,7 +338,13 @@ while True:
                                 f.close()
                                 write_status_messages(
                                     'Number writed at file', week_day)
-                                fill_training_list(last_number)
+                                # адрес страницы первой ожидаемой тренировки
+                                url_week_train = URL_TRAINING + str(last_number + 1)
+                                # адрес страницs регистрации первой ожидаемой тренировки
+                                url_reg_week_train = URL_REG + str(last_number + 1)
+                                # создание списка ожидаемых тренировок на ближайшую неделю
+                                write_status_messages(url_week_train, week_day)
+                                write_status_messages(url_reg_week_train, week_day)
                                 break
                             else:
                                 write_status_messages(
